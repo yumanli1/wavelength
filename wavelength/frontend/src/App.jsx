@@ -1,51 +1,43 @@
-import React, { useState } from "react";
-import Board from "./Board";
-import Hint from "./Hint";
-import Guess from "./Guess";
-
-function getRandomTarget() {
-  return Math.floor(Math.random() * 181); // 0-180 degrees
-}
+import { useEffect, useState } from "react";
+import AuthPage from "./AuthPage";
+import Dashboard from "./Dashboard";
+import Lobby from "./Lobby";
+import GameRoom from "./GameRoom";
+import { getCurrentUser } from "./services/api";
 
 export default function App() {
-  const [player, setPlayer] = useState(1);
-  const [hint, setHint] = useState("");
-  const [target, setTarget] = useState(getRandomTarget());
-  const [guess, setGuess] = useState(null);
-  const [result, setResult] = useState(null);
+  const [user, setUser] = useState(null);
+  const [room, setRoom] = useState(null);
+  const [view, setView] = useState("auth");
 
-  function handleHintSubmit(hintValue) {
-    setHint(hintValue);
+  useEffect(() => {
+    async function checkUser() {
+      const data = await getCurrentUser();
+
+      if (data.logged_in) {
+        setUser(data.user);
+        setView("dashboard");
+      }
+    }
+
+    checkUser();
+  }, []);
+
+  if (view === "auth") {
+    return <AuthPage setUser={setUser} setView={setView} />;
   }
 
-  function handleGuessSubmit(guessValue) {
-    setGuess(guessValue);
-    setResult(Math.abs(guessValue - target));
+  if (view === "dashboard") {
+    return <Dashboard user={user} setRoom={setRoom} setView={setView} />;
   }
 
-  function nextTurn() {
-    setPlayer(player === 1 ? 2 : 1);
-    setHint("");
-    setGuess(null);
-    setResult(null);
-    setTarget(getRandomTarget());
+  if (view === "lobby") {
+    return <Lobby user={user} room={room} setRoom={setRoom} setView={setView} />;
   }
 
-  return (
-    <div style={{ textAlign: "center" }}>
-      <h1>Wavelength Game</h1>
-      <h2>Player {player}'s Turn</h2>
-      <Board target={hint ? target : null} guess={guess} />
-      {!hint && <Hint onSubmit={handleHintSubmit} />}
-      {hint && guess === null && <Guess onSubmit={handleGuessSubmit} hint={hint} />}
-      {result !== null && (
-        <div>
-          <p>Target: {target}°</p>
-          <p>Your guess: {guess}°</p>
-          <p>Difference: {result}°</p>
-          <button onClick={nextTurn}>Next Turn</button>
-        </div>
-      )}
-    </div>
-  );
+  if (view === "game") {
+    return <GameRoom user={user} room={room} setRoom={setRoom} />;
+  }
+
+  return <h1>Loading...</h1>;
 }
