@@ -1,114 +1,80 @@
-const API_BASE = "http://127.0.0.1:5000";
+const API_BASE = process.env.REACT_APP_API_BASE || "http://127.0.0.1:5000";
 
-export async function signup(username, password) {
-  const response = await fetch(`${API_BASE}/api/auth/signup`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+async function request(path, options = {}) {
+  const response = await fetch(`${API_BASE}${path}`, {
     credentials: "include",
-    body: JSON.stringify({ username, password })
+    ...options,
+    headers: {
+      ...(options.body ? { "Content-Type": "application/json" } : {}),
+      ...(options.headers || {})
+    }
   });
 
-  return response.json();
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok && !data.error) {
+    data.error = "Something went wrong. Please try again.";
+  }
+
+  return data;
+}
+
+export async function signup(username, password) {
+  return request("/api/auth/signup", {
+    method: "POST",
+    body: JSON.stringify({ username, password })
+  });
 }
 
 export async function login(username, password) {
-  const response = await fetch(`${API_BASE}/api/auth/login`, {
+  return request("/api/auth/login", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    credentials: "include",
     body: JSON.stringify({ username, password })
   });
-
-  return response.json();
 }
 
 export async function logout() {
-  const response = await fetch(`${API_BASE}/api/auth/logout`, {
-    method: "POST",
-    credentials: "include"
-  });
-
-  return response.json();
+  return request("/api/auth/logout", { method: "POST" });
 }
 
 export async function getCurrentUser() {
-  const response = await fetch(`${API_BASE}/api/auth/me`, {
-    credentials: "include"
-  });
-
-  return response.json();
+  return request("/api/auth/me");
 }
 
 export async function createRoom() {
-  const response = await fetch(`${API_BASE}/api/rooms/create`, {
-    method: "POST",
-    credentials: "include"
-  });
-
-  return response.json();
+  return request("/api/rooms/create", { method: "POST" });
 }
 
 export async function joinRoom(roomCode) {
-  const response = await fetch(`${API_BASE}/api/rooms/${roomCode}/join`, {
-    method: "POST",
-    credentials: "include"
-  });
-
-  return response.json();
+  return request(`/api/rooms/${roomCode}/join`, { method: "POST" });
 }
 
 export async function getRoom(roomCode) {
-  const response = await fetch(`${API_BASE}/api/rooms/${roomCode}`, {
-    credentials: "include"
-  });
-
-  return response.json();
+  return request(`/api/rooms/${roomCode}`);
 }
 
 export async function startGame(roomCode) {
-  const response = await fetch(`${API_BASE}/api/game/${roomCode}/start`, {
-    method: "POST",
-    credentials: "include"
-  });
-
-  return response.json();
+  return request(`/api/game/${roomCode}/start`, { method: "POST" });
 }
 
 export async function submitHint(roomCode, hint) {
-  const response = await fetch(`${API_BASE}/api/game/${roomCode}/hint`, {
+  return request(`/api/game/${roomCode}/hint`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    credentials: "include",
     body: JSON.stringify({ hint })
   });
-
-  return response.json();
 }
 
 export async function submitGuess(roomCode, guess) {
-  const response = await fetch(`${API_BASE}/api/game/${roomCode}/guess`, {
+  return request(`/api/game/${roomCode}/guess`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    credentials: "include",
     body: JSON.stringify({ guess })
   });
-
-  return response.json();
 }
 
 export async function revealRound(roomCode) {
-  const response = await fetch(`${API_BASE}/api/game/${roomCode}/reveal`, {
-    method: "POST",
-    credentials: "include"
-  });
+  return request(`/api/game/${roomCode}/reveal`, { method: "POST" });
+}
 
-  return response.json();
+export async function nextRound(roomCode) {
+  return request(`/api/game/${roomCode}/next-round`, { method: "POST" });
 }
