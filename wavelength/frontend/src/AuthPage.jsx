@@ -6,15 +6,19 @@ export default function AuthPage({ setUser, setView }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
 
   async function handleSubmit(event) {
     event.preventDefault();
     setMessage("");
+    setBusy(true);
 
-    const data =
-      mode === "login"
-        ? await login(username, password)
-        : await signup(username, password);
+    const cleanUsername = username.trim();
+    const data = mode === "login"
+      ? await login(cleanUsername, password)
+      : await signup(cleanUsername, password);
+
+    setBusy(false);
 
     if (data.error) {
       setMessage(data.error);
@@ -26,48 +30,55 @@ export default function AuthPage({ setUser, setView }) {
   }
 
   return (
-    <div style={{ textAlign: "center", marginTop: "80px" }}>
-      <h1>Wavelength Game</h1>
+    <main className="page auth-page">
+      <section className="hero card">
+        <p className="eyebrow">CSE 108 Final Project</p>
+        <h1>Wavelength</h1>
+        <p className="muted">
+          A live team guessing game with accounts, rooms, scoring, database persistence, and a React/Flask full-stack flow.
+        </p>
+      </section>
 
-      <h2>{mode === "login" ? "Log In" : "Sign Up"}</h2>
+      <section className="card auth-card">
+        <h2>{mode === "login" ? "Log in" : "Create account"}</h2>
+        <form onSubmit={handleSubmit} className="form-stack">
+          <label>
+            Username
+            <input
+              type="text"
+              placeholder="ex: kris"
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+            />
+          </label>
 
-      <form onSubmit={handleSubmit}>
-        <div>
-          <input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
-          />
-        </div>
+          <label>
+            Password
+            <input
+              type="password"
+              placeholder="Enter password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+          </label>
 
-        <div style={{ marginTop: "10px" }}>
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-        </div>
+          <button className="primary-button" type="submit" disabled={busy}>
+            {busy ? "Working..." : mode === "login" ? "Log in" : "Sign up"}
+          </button>
+        </form>
 
-        <button style={{ marginTop: "10px" }} type="submit">
-          {mode === "login" ? "Log In" : "Sign Up"}
+        {message && <p className="error-text">{message}</p>}
+
+        <button
+          className="link-button"
+          onClick={() => {
+            setMessage("");
+            setMode(mode === "login" ? "signup" : "login");
+          }}
+        >
+          {mode === "login" ? "Need an account? Sign up" : "Already have an account? Log in"}
         </button>
-      </form>
-
-      {message && <p style={{ color: "red" }}>{message}</p>}
-
-      <button
-        style={{ marginTop: "20px" }}
-        onClick={() => {
-          setMessage("");
-          setMode(mode === "login" ? "signup" : "login");
-        }}
-      >
-        {mode === "login"
-          ? "Need an account? Sign up"
-          : "Already have an account? Log in"}
-      </button>
-    </div>
+      </section>
+    </main>
   );
 }

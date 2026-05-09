@@ -1,24 +1,35 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 export default function Guess({ onSubmit, hint }) {
-  const [guess, setGuess] = useState("");
+  const [guess, setGuess] = useState(90);
+
   return (
     <form
-      onSubmit={e => {
-        e.preventDefault();
+      className="form-stack compact-form"
+      onSubmit={(event) => {
+        event.preventDefault();
         onSubmit(Number(guess));
       }}
     >
-      <p>Hint: {hint}</p>
+      <p><strong>Hint:</strong> {hint}</p>
+      <label>
+        Team guess: {guess}°
+        <input
+          type="range"
+          min="0"
+          max="180"
+          value={guess}
+          onChange={(event) => setGuess(event.target.value)}
+        />
+      </label>
       <input
         type="number"
         min="0"
         max="180"
         value={guess}
-        onChange={e => setGuess(e.target.value)}
-        placeholder="Your guess (0-180)"
+        onChange={(event) => setGuess(event.target.value)}
       />
-      <button type="submit">Submit Guess</button>
+      <button className="primary-button" type="submit">Submit guess</button>
     </form>
   );
 }
