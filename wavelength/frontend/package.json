@@ -2,11 +2,11 @@
   "name": "wavelength-game",
   "version": "1.0.0",
   "description": "A two-player wavelength game where players take turns giving hints and guessing based on those hints.",
-  "main": "src/index.tsx",
+  "main": "src/index.jsx",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "start": "node --openssl-legacy-provider node_modules/react-scripts/scripts/start.js",
+    "build": "node --openssl-legacy-provider node_modules/react-scripts/scripts/build.js",
+    "test": "node --openssl-legacy-provider node_modules/react-scripts/scripts/test.js",
     "eject": "react-scripts eject"
   },
   "keywords": [
