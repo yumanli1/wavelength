@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 from flask_cors import CORS
 from extensions import db, login_manager
@@ -9,14 +10,22 @@ from routes.game_routes import game_bp
 
 app = Flask(__name__)
 
-app.config["SECRET_KEY"] = "change-this-later"
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///wavelength.db"
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-this-before-deploying")
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///wavelength.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-CORS(app, supports_credentials=True)
+# These settings make the session cookie work better when the React app and Flask
+# API are hosted on different URLs. For localhost, the defaults still work.
+if os.environ.get("FLASK_ENV") == "production":
+    app.config["SESSION_COOKIE_SAMESITE"] = "None"
+    app.config["SESSION_COOKIE_SECURE"] = True
+
+allowed_origin = os.environ.get("FRONTEND_ORIGIN", "http://localhost:3000")
+CORS(app, supports_credentials=True, origins=[allowed_origin, "http://127.0.0.1:3000"])
 
 db.init_app(app)
 login_manager.init_app(app)
+login_manager.login_view = "auth.login"
 
 
 @login_manager.user_loader
