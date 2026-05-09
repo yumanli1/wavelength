@@ -7,3 +7,4 @@ instance/
 *.db
 .env
 cookies.txt
+cookies2.txt

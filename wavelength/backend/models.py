@@ -34,3 +34,15 @@ class GameRoom(db.Model):
 
     round_number = db.Column(db.Integer, default=1)
     winner = db.Column(db.String(1), nullable=True)
+
+class RoomPlayer(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+        
+    room_id = db.Column(db.Integer, db.ForeignKey("game_room.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+        
+    team = db.Column(db.String(1), nullable=False)
+    is_psychic = db.Column(db.Boolean, default=False)
+        
+    room = db.relationship("GameRoom", backref="players")
+    user = db.relationship("User", backref="rooms")
