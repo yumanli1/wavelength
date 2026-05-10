@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Board from "./Board";
 import Hint from "./Hint";
 import Guess from "./Guess";
-import { getRoom, submitHint, submitGuess, revealRound, nextRound } from "./services/api";
+import { getRoom, submitHint, submitGuess, revealRound, nextRound, getChatMessages, sendChatMessage } from "./services/api";
 
 function Scoreboard({ room }) {
   return (
@@ -54,6 +54,10 @@ function PhaseHelp({ room, isPsychic, isActiveTeam }) {
 export default function GameRoom({ user, room, setRoom, setView }) {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatText, setChatText] = useState("");
+  const [chatError, setChatError] = useState("");
+  const [chatBusy, setChatBusy] = useState(false);
 
   useEffect(() => {
     if (!room?.room_code) return;
@@ -71,6 +75,29 @@ export default function GameRoom({ user, room, setRoom, setView }) {
 
     return () => clearInterval(timer);
   }, [room?.room_code, setRoom]);
+
+  useEffect(() => {
+    if (!room?.room_code) return;
+
+    let timer = null;
+
+    async function refreshChat() {
+      const data = await getChatMessages(room.room_code);
+      if (data.error) {
+        setChatError(data.error);
+        return;
+      }
+      setChatError("");
+      setChatMessages(Array.isArray(data.messages) ? data.messages : []);
+    }
+
+    refreshChat();
+    timer = setInterval(refreshChat, 3500);
+
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [room?.room_code]);
 
   if (!room) {
     return (
@@ -111,6 +138,43 @@ export default function GameRoom({ user, room, setRoom, setView }) {
       setMessage(`Round scored: ${data.points} point${data.points === 1 ? "" : "s"}.`);
     } else if (data.message) {
       setMessage(data.message);
+    }
+  }
+
+  function formatTime(timestamp) {
+    const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  }
+
+  async function handleSendChat(event) {
+    event.preventDefault();
+    setChatError("");
+
+    const trimmed = chatText.trim();
+    if (!trimmed) {
+      setChatError("Message cannot be blank.");
+      return;
+    }
+
+    if (trimmed.length > 250) {
+      setChatError("Message must be 250 characters or fewer.");
+      return;
+    }
+
+    setChatBusy(true);
+    const data = await sendChatMessage(room.room_code, trimmed);
+    setChatBusy(false);
+
+    if (data.error) {
+      setChatError(data.error);
+      return;
+    }
+
+    setChatText("");
+    const refreshed = await getChatMessages(room.room_code);
+    if (!refreshed.error) {
+      setChatMessages(Array.isArray(refreshed.messages) ? refreshed.messages : []);
     }
   }
 
@@ -174,6 +238,45 @@ export default function GameRoom({ user, room, setRoom, setView }) {
             <button className="primary-button" onClick={() => setView("dashboard")}>Back to dashboard</button>
           )}
         </div>
+
+        <section className="panel chat-panel" aria-label="Room chat">
+          <div className="chat-header">
+            <h2>Room chat</h2>
+            <p className="muted">Messages are shared with everyone in this room.</p>
+          </div>
+
+          <div className="chat-messages" role="log" aria-live="polite">
+            {chatMessages.length === 0 ? (
+              <p className="muted">No messages yet. Say hi!</p>
+            ) : (
+              chatMessages.map((msg) => (
+                <div className="chat-message" key={msg.id}>
+                  <div className="chat-meta">
+                    <strong>{msg.username}</strong>
+                    <span className="muted">{formatTime(msg.created_at)}</span>
+                  </div>
+                  <p className="chat-text">{msg.message}</p>
+                </div>
+              ))
+            )}
+          </div>
+
+          <form className="chat-input-row" onSubmit={handleSendChat}>
+            <input
+              type="text"
+              value={chatText}
+              maxLength={250}
+              placeholder={`Message as ${user.username}`}
+              onChange={(event) => setChatText(event.target.value)}
+              disabled={chatBusy}
+            />
+            <button className="primary-button" type="submit" disabled={chatBusy}>
+              Send
+            </button>
+          </form>
+
+          {chatError && <p className="error-text">{chatError}</p>}
+        </section>
 
         {busy && <p className="muted">Updating game...</p>}
         {message && <p className={message.includes("error") ? "error-text" : "success-text"}>{message}</p>}

@@ -127,3 +127,33 @@ export async function revealRound(roomCode) {
 export async function nextRound(roomCode) {
   return request(`/api/game/${roomCode}/next-round`, { method: "POST" });
 }
+
+export async function getChatMessages(roomCode) {
+  const cleanRoomCode = String(roomCode || "").trim().toUpperCase();
+  if (!cleanRoomCode) {
+    return { error: "Missing room code." };
+  }
+  return request(`/api/chat/${encodeURIComponent(cleanRoomCode)}`);
+}
+
+export async function sendChatMessage(roomCode, message) {
+  const cleanRoomCode = String(roomCode || "").trim().toUpperCase();
+  const trimmed = String(message || "").trim();
+
+  if (!cleanRoomCode) {
+    return { error: "Missing room code." };
+  }
+
+  if (!trimmed) {
+    return { error: "Message cannot be blank." };
+  }
+
+  if (trimmed.length > 250) {
+    return { error: "Message must be 250 characters or fewer." };
+  }
+
+  return request(`/api/chat/${encodeURIComponent(cleanRoomCode)}`, {
+    method: "POST",
+    body: JSON.stringify({ message: trimmed })
+  });
+}

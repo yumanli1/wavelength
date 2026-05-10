@@ -1,6 +1,7 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from extensions import db
+from datetime import datetime
 
 
 class User(db.Model, UserMixin):
@@ -55,3 +56,14 @@ class SpectrumTopic(db.Model):
     left = db.Column(db.String(80), nullable=False)
     right = db.Column(db.String(80), nullable=False)
     source = db.Column(db.String(20), default="preset")
+
+
+class ChatMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey("game_room.id"), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
+    message = db.Column(db.String(250), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+    room = db.relationship("GameRoom", backref="chat_messages")
+    user = db.relationship("User", backref="chat_messages")

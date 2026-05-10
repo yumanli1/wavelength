@@ -6,6 +6,7 @@ from models import User
 from routes.auth_routes import auth_bp
 from routes.room_routes import room_bp
 from routes.game_routes import game_bp
+from routes.chat_routes import chat_bp
 
 
 app = Flask(__name__)
@@ -36,6 +37,7 @@ def load_user(user_id):
 app.register_blueprint(auth_bp)
 app.register_blueprint(room_bp)
 app.register_blueprint(game_bp)
+app.register_blueprint(chat_bp)
 
 
 with app.app_context():
