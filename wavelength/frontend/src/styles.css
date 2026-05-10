@@ -282,3 +282,39 @@ input[type="range"] {
     flex-direction: column;
   }
 }
+
+/* ── Interactive Wheel ──────────────────────────────────────── */
+.board-interactive {
+  cursor: crosshair;
+}
+
+.board-interactive:active {
+  cursor: grabbing;
+}
+
+.guess-wrapper {
+  margin: 8px 0 16px;
+}
+
+.guess-hint {
+  margin-bottom: 6px;
+}
+
+.guess-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.guess-value {
+  font-size: 1rem;
+  color: var(--text-muted, #64748b);
+}
+
+.guess-value strong {
+  color: #1d4ed8;
+  font-size: 1.1rem;
+}

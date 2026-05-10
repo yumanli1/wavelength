@@ -205,7 +205,7 @@ export default function GameRoom({ user, room, setRoom, setView }) {
           <span>{room.spectrum_right}</span>
         </div>
 
-        <Board target={room.target} guess={room.guess} />
+        {!canGuess && <Board target={room.target} guess={room.guess} />}
 
         <div className="status-panel">
           <p><strong>Phase:</strong> {room.phase.replace("_", " ")}</p>
@@ -224,7 +224,12 @@ export default function GameRoom({ user, room, setRoom, setView }) {
           )}
 
           {canGuess && (
-            <Guess disabled={busy} hint={room.hint} onSubmit={(guess) => runAction(() => submitGuess(room.room_code, guess))} />
+            <Guess
+              disabled={busy}
+              hint={room.hint}
+              target={room.target}
+              onSubmit={(guess) => runAction(() => submitGuess(room.room_code, guess))}
+            />
           )}
 
           {canReveal && (

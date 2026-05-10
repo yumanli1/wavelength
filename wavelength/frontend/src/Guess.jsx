@@ -1,52 +1,32 @@
 import { useState } from "react";
+import Board from "./Board";
 
-function clampGuess(value) {
-  return Math.max(0, Math.min(180, value));
-}
-
-export default function Guess({ onSubmit, hint, disabled = false }) {
+export default function Guess({ onSubmit, hint, disabled = false, target, revealedGuess }) {
   const [guess, setGuess] = useState(90);
 
-  function updateGuess(nextValue) {
-    const parsed = Number.parseInt(nextValue, 10);
-    if (Number.isNaN(parsed)) return;
-    setGuess(clampGuess(parsed));
-  }
-
   return (
-    <form
-      className="form-stack compact-form"
-      onSubmit={(event) => {
-        event.preventDefault();
-        if (disabled) return;
-        onSubmit(guess);
-      }}
-    >
-      <p><strong>Hint:</strong> {hint}</p>
-      <label>
-        Team guess: {guess}°
-        <input
-          type="range"
-          min="0"
-          max="180"
-          step="1"
-          value={guess}
-          disabled={disabled}
-          onChange={(event) => updateGuess(event.target.value)}
-        />
-      </label>
-      <input
-        type="number"
-        min="0"
-        max="180"
-        step="1"
-        value={guess}
-        disabled={disabled}
-        onChange={(event) => updateGuess(event.target.value)}
+    <div className="guess-wrapper">
+      <p className="guess-hint"><strong>Hint:</strong> {hint}</p>
+
+      <Board
+        target={target}
+        guess={revealedGuess !== undefined ? revealedGuess : guess}
+        interactive={!disabled}
+        onGuessChange={setGuess}
       />
-      <button className="primary-button" type="submit" disabled={disabled}>
-        Submit guess
-      </button>
-    </form>
+
+      <div className="guess-controls">
+        <span className="guess-value">Your guess: <strong>{guess}°</strong></span>
+        <button
+          className="primary-button"
+          disabled={disabled}
+          onClick={() => {
+            if (!disabled) onSubmit(guess);
+          }}
+        >
+          Submit guess
+        </button>
+      </div>
+    </div>
   );
 }
