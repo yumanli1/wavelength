@@ -163,6 +163,12 @@ input:focus {
   color: var(--text);
 }
 
+.spectrum-connector {
+  opacity: 0.72;
+  font-size: 22px;
+  line-height: 1;
+}
+
 .target-line {
   stroke: var(--target);
 }

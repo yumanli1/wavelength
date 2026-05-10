@@ -130,7 +130,9 @@ export default function GameRoom({ user, room, setRoom, setView }) {
 
         <div className="spectrum-card">
           <span>{room.spectrum_left}</span>
-          <strong>Target spectrum</strong>
+          <strong className="spectrum-connector" aria-label="Spectrum">
+            ↔
+          </strong>
           <span>{room.spectrum_right}</span>
         </div>
 

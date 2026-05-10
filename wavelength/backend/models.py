@@ -46,3 +46,12 @@ class RoomPlayer(db.Model):
         
     room = db.relationship("GameRoom", backref="players")
     user = db.relationship("User", backref="rooms")
+
+
+class SpectrumTopic(db.Model):
+    __table_args__ = (db.UniqueConstraint("left", "right", name="uq_spectrum_left_right"),)
+
+    id = db.Column(db.Integer, primary_key=True)
+    left = db.Column(db.String(80), nullable=False)
+    right = db.Column(db.String(80), nullable=False)
+    source = db.Column(db.String(20), default="preset")
