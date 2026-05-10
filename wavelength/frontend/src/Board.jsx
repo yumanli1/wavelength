@@ -49,8 +49,7 @@ const BASE_ZONES = [
 ];
 
 const BASE_LABELS = [
-  { midDeg: 34,    pts: 2, small: true  },
-  { midDeg: 146,   pts: 2, small: true  },
+  // Gray 2-pt labels at 34 and 146 removed — they're in the 0-pt zone
   { midDeg: 73,    pts: 2              },
   { midDeg: 107,   pts: 2              },
   { midDeg: 81.5,  pts: 3              },
@@ -72,7 +71,7 @@ function shiftLabels(labels, target) {
   return labels.map((l) => ({ ...l, midDeg: l.midDeg + offset }));
 }
 
-export default function Board({ target, guess, interactive = false, onGuessChange }) {
+export default function Board({ target, guess, interactive = false, onGuessChange, showLabels = true, showZones = true }) {
   const svgRef = useRef(null);
   const dragging = useRef(false);
 
@@ -140,10 +139,13 @@ export default function Board({ target, guess, interactive = false, onGuessChang
         onPointerLeave={handlePointerUp}
         style={{ touchAction: "none" }}
       >
-        {/* Colored scoring bands */}
-        {zones.map((zone, i) => (
+        {/* Colored scoring bands — only shown when zones are visible */}
+        {showZones ? zones.map((zone, i) => (
           <path key={i} d={arcBand(zone.startDeg, zone.endDeg, INNER_R, OUTER_R)} fill={zone.color} />
-        ))}
+        )) : (
+          /* Plain gray fill for the whole arc when zones are hidden */
+          <path d={arcBand(0, 180, INNER_R, OUTER_R)} fill="#e2e8f0" />
+        )}
 
         {/* Outer arc border */}
         <path
@@ -159,8 +161,8 @@ export default function Board({ target, guess, interactive = false, onGuessChang
         <line x1={polarToXY(0,   INNER_R).x} y1={polarToXY(0,   INNER_R).y} x2={polarToXY(0,   OUTER_R).x} y2={polarToXY(0,   OUTER_R).y} stroke="#475569" strokeWidth="2" />
         <line x1={polarToXY(180, INNER_R).x} y1={polarToXY(180, INNER_R).y} x2={polarToXY(180, OUTER_R).x} y2={polarToXY(180, OUTER_R).y} stroke="#475569" strokeWidth="2" />
 
-        {/* Point labels */}
-        {labels.map((l, i) => {
+        {/* Point labels — hidden for guessers */}
+        {showLabels && labels.map((l, i) => {
           if (l.midDeg < 3 || l.midDeg > 177) return null;
           const pos = polarToXY(l.midDeg, (INNER_R + OUTER_R) / 2);
           return (

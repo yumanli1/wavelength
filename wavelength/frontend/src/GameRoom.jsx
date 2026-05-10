@@ -205,7 +205,20 @@ export default function GameRoom({ user, room, setRoom, setView }) {
           <span>{room.spectrum_right}</span>
         </div>
 
-        {!canGuess && <Board target={room.target} guess={room.guess} />}
+        {/* Psychic POV: show zones + labels but NOT the gray outer bands (handled in Board).
+            Guesser guessing phase: show blank interactive board.
+            Otherwise (reveal/scored/game_over): show full board. */}
+        {canGuess ? (
+          /* Guessers see a blank interactive board — no zones, no labels, no target */
+          null /* Board is rendered inside <Guess> below */
+        ) : (
+          <Board
+            target={room.target}
+            guess={room.guess}
+            showLabels={isPsychic || room.phase === "reveal" || room.phase === "scored" || room.phase === "game_over"}
+            showZones={isPsychic || room.phase === "reveal" || room.phase === "scored" || room.phase === "game_over"}
+          />
+        )}
 
         <div className="status-panel">
           <p><strong>Phase:</strong> {room.phase.replace("_", " ")}</p>
@@ -227,7 +240,6 @@ export default function GameRoom({ user, room, setRoom, setView }) {
             <Guess
               disabled={busy}
               hint={room.hint}
-              target={room.target}
               onSubmit={(guess) => runAction(() => submitGuess(room.room_code, guess))}
             />
           )}
