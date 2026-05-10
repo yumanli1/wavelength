@@ -239,6 +239,20 @@ def submit_guess(room_code):
     if guess < 0 or guess > 180:
         return jsonify({"error": "Guess must be between 0 and 180"}), 400
 
+    room_player = RoomPlayer.query.filter_by(
+        room_id=room.id,
+        user_id=current_user.id
+    ).first()
+
+    if not room_player:
+        return jsonify({"error": "You are not in this room"}), 403
+
+    if room_player.team == room.active_team:
+        return jsonify({"error": "The opposing team submits the guess, not the active team"}), 403
+
+    if room_player.is_psychic:
+        return jsonify({"error": "The psychic cannot submit a guess"}), 403
+
     room.guess = guess
     room.phase = "reveal"
 

@@ -19,7 +19,7 @@ function Scoreboard({ room }) {
   );
 }
 
-function PhaseHelp({ room, isPsychic, isActiveTeam }) {
+function PhaseHelp({ room, isPsychic, isActiveTeam, isOpposingTeam }) {
   if (room.phase === "psychic_clue" && isPsychic) {
     return <p className="success-text">You are the psychic. Give a clue that points your team toward the hidden target.</p>;
   }
@@ -28,12 +28,16 @@ function PhaseHelp({ room, isPsychic, isActiveTeam }) {
     return <p className="muted">Waiting for the active team psychic to submit a clue.</p>;
   }
 
-  if (room.phase === "team_guess" && !isPsychic && isActiveTeam) {
-    return <p className="success-text">The clue is in. Move the dial by entering a number from 0 to 180.</p>;
+  if (room.phase === "team_guess" && isOpposingTeam) {
+    return <p className="success-text">The clue is in. Your team guesses — move the dial to a number from 0 to 180.</p>;
+  }
+
+  if (room.phase === "team_guess" && isPsychic) {
+    return <p className="muted">You gave the clue — wait for the opposing team to guess.</p>;
   }
 
   if (room.phase === "team_guess") {
-    return <p className="muted">Waiting for a non-psychic player to submit a guess.</p>;
+    return <p className="muted">Waiting for the opposing team to submit a guess.</p>;
   }
 
   if (room.phase === "reveal") {
@@ -112,10 +116,11 @@ export default function GameRoom({ user, room, setRoom, setView }) {
 
   const myPlayer = room.my_player || {};
   const isPsychic = Boolean(myPlayer.is_psychic);
-  const isActiveTeam = myPlayer.team === room.active_team;
+  const isActiveTeam = Boolean(myPlayer.team) && myPlayer.team === room.active_team;
+  const isOpposingTeam = Boolean(myPlayer.team) && myPlayer.team !== room.active_team;
   const psychicPlayer = (room.players || []).find((player) => player.is_psychic);
   const canHint = room.phase === "psychic_clue" && isPsychic;
-  const canGuess = room.phase === "team_guess" && isActiveTeam && !isPsychic;
+  const canGuess = room.phase === "team_guess" && isOpposingTeam;
   const canReveal = room.phase === "reveal";
   const canNextRound = room.phase === "scored";
 
@@ -210,7 +215,7 @@ export default function GameRoom({ user, room, setRoom, setView }) {
           {room.target !== null && room.target !== undefined && <p><strong>Target:</strong> {room.target}°</p>}
           {room.hint && <p><strong>Hint:</strong> {room.hint}</p>}
           {room.guess !== null && room.guess !== undefined && <p><strong>Guess:</strong> {room.guess}°</p>}
-          <PhaseHelp room={room} isPsychic={isPsychic} isActiveTeam={isActiveTeam} />
+          <PhaseHelp room={room} isPsychic={isPsychic} isActiveTeam={isActiveTeam} isOpposingTeam={isOpposingTeam} />
         </div>
 
         <div className="controls-panel">
