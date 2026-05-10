@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_login import login_required, current_user
 from extensions import db
-from models import GameRoom, RoomPlayer, SpectrumTopic
+from models import GameRoom, RoomPlayer, SpectrumTopic, RoundHistory
 from serializers import room_to_dict
 import random
 import os
@@ -276,6 +276,23 @@ def reveal(room_code):
         return jsonify({"error": "Target and guess are required before reveal"}), 400
 
     points = calculate_score(room.target, room.guess)
+
+    psychic_player = RoomPlayer.query.filter_by(room_id=room.id, is_psychic=True).first()
+    psychic_name = psychic_player.user.username if psychic_player else None
+
+    history_entry = RoundHistory(
+        room_id=room.id,
+        round_number=room.round_number,
+        active_team=room.active_team,
+        spectrum_left=room.spectrum_left,
+        spectrum_right=room.spectrum_right,
+        hint=room.hint or "",
+        target=room.target,
+        guess=room.guess,
+        points=points,
+        psychic_username=psychic_name,
+    )
+    db.session.add(history_entry)
 
     if room.active_team == "A":
         room.team_a_score += points

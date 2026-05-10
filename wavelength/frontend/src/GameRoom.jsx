@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Board from "./Board";
 import Hint from "./Hint";
 import Guess from "./Guess";
+import GameOver from "./GameOver";
 import { getRoom, submitHint, submitGuess, revealRound, nextRound, getChatMessages, sendChatMessage } from "./services/api";
 
 function Scoreboard({ room }) {
@@ -112,6 +113,10 @@ export default function GameRoom({ user, room, setRoom, setView }) {
         </section>
       </main>
     );
+  }
+
+  if (room.phase === "game_over") {
+    return <GameOver room={room} user={user} onBack={() => setView("dashboard")} />;
   }
 
   const myPlayer = room.my_player || {};
@@ -254,10 +259,6 @@ export default function GameRoom({ user, room, setRoom, setView }) {
             <button className="primary-button" disabled={busy} onClick={() => runAction(() => nextRound(room.room_code))}>
               Start next round
             </button>
-          )}
-
-          {room.phase === "game_over" && (
-            <button className="primary-button" onClick={() => setView("dashboard")}>Back to dashboard</button>
           )}
         </div>
 

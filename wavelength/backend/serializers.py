@@ -22,6 +22,20 @@ def room_to_dict(room, current_user_id=None):
     is_psychic = bool(my_player and my_player.get("is_psychic"))
     hide_target = room.phase in {"psychic_clue", "team_guess", "reveal"} and not is_psychic
 
+    history = []
+    for entry in sorted(getattr(room, "round_history", []), key=lambda e: e.round_number):
+        history.append({
+            "round_number": entry.round_number,
+            "active_team": entry.active_team,
+            "spectrum_left": entry.spectrum_left,
+            "spectrum_right": entry.spectrum_right,
+            "hint": entry.hint,
+            "target": entry.target,
+            "guess": entry.guess,
+            "points": entry.points,
+            "psychic_username": entry.psychic_username,
+        })
+
     return {
         "id": room.id,
         "room_code": room.room_code,
@@ -39,4 +53,5 @@ def room_to_dict(room, current_user_id=None):
         "target_hidden": bool(hide_target and room.target is not None),
         "players": players,
         "my_player": my_player,
+        "round_history": history,
     }

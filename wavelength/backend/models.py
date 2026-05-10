@@ -58,6 +58,22 @@ class SpectrumTopic(db.Model):
     source = db.Column(db.String(20), default="preset")
 
 
+class RoundHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey("game_room.id"), nullable=False, index=True)
+    round_number = db.Column(db.Integer, nullable=False)
+    active_team = db.Column(db.String(1), nullable=False)
+    spectrum_left = db.Column(db.String(100), nullable=False)
+    spectrum_right = db.Column(db.String(100), nullable=False)
+    hint = db.Column(db.String(255), nullable=False, default="")
+    target = db.Column(db.Integer, nullable=True)
+    guess = db.Column(db.Integer, nullable=True)
+    points = db.Column(db.Integer, nullable=False, default=0)
+    psychic_username = db.Column(db.String(80), nullable=True)
+
+    room = db.relationship("GameRoom", backref="round_history")
+
+
 class ChatMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     room_id = db.Column(db.Integer, db.ForeignKey("game_room.id"), nullable=False, index=True)
