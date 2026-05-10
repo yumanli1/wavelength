@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify
 from flask_login import login_required, current_user
 from extensions import db
 from models import GameRoom, RoomPlayer
+from serializers import room_to_dict
 import random
 import string
 
@@ -10,28 +11,6 @@ room_bp = Blueprint("rooms", __name__, url_prefix="/api/rooms")
 
 def generate_room_code():
     return "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
-
-
-def room_to_dict(room):
-    return {
-        "id": room.id,
-        "room_code": room.room_code,
-        "phase": room.phase,
-        "active_team": room.active_team,
-        "team_a_score": room.team_a_score,
-        "team_b_score": room.team_b_score,
-        "round_number": room.round_number,
-        "winner": room.winner,
-        "players": [
-            {
-                "id": player.user.id,
-                "username": player.user.username,
-                "team": player.team,
-                "is_psychic": player.is_psychic
-            }
-            for player in room.players
-        ]
-    }
 
 
 @room_bp.route("/create", methods=["POST"])
@@ -59,7 +38,7 @@ def create_room():
 
     return jsonify({
         "message": "Room created successfully",
-        "room": room_to_dict(room)
+        "room": room_to_dict(room, current_user_id=current_user.id)
     }), 201
 
 
@@ -79,7 +58,7 @@ def join_room(room_code):
     if existing_player:
         return jsonify({
             "message": "You are already in this room",
-            "room": room_to_dict(room)
+            "room": room_to_dict(room, current_user_id=current_user.id)
         })
 
     team_a_count = RoomPlayer.query.filter_by(room_id=room.id, team="A").count()
@@ -99,7 +78,7 @@ def join_room(room_code):
 
     return jsonify({
         "message": "Joined room successfully",
-        "room": room_to_dict(room)
+        "room": room_to_dict(room, current_user_id=current_user.id)
     })
 
 
@@ -112,5 +91,5 @@ def get_room(room_code):
         return jsonify({"error": "Room not found"}), 404
 
     return jsonify({
-        "room": room_to_dict(room)
+        "room": room_to_dict(room, current_user_id=current_user.id)
     })

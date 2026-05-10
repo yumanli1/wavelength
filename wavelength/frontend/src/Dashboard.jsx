@@ -17,6 +17,11 @@ export default function Dashboard({ user, setUser, setRoom, setView }) {
       return;
     }
 
+    if (!data.room) {
+      setMessage("Unexpected server response while creating a room. Please try again.");
+      return;
+    }
+
     setRoom(data.room);
     setView("lobby");
   }
@@ -36,6 +41,11 @@ export default function Dashboard({ user, setUser, setRoom, setView }) {
 
     if (data.error) {
       setMessage(data.error);
+      return;
+    }
+
+    if (!data.room) {
+      setMessage("Unexpected server response while joining the room. Please try again.");
       return;
     }
 

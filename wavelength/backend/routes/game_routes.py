@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_login import login_required, current_user
 from extensions import db
 from models import GameRoom, RoomPlayer
+from serializers import room_to_dict
 import random
 
 game_bp = Blueprint("games", __name__, url_prefix="/api/game")
@@ -50,11 +51,7 @@ def start_game(room_code):
 
     return jsonify({
         "message": "Game started",
-        "room_code": room.room_code,
-        "phase": room.phase,
-        "active_team": room.active_team,
-        "psychic": psychic.user.username,
-        "target": room.target
+        "room": room_to_dict(room, current_user_id=current_user.id),
     })
 
 
@@ -87,8 +84,7 @@ def submit_hint(room_code):
 
     return jsonify({
         "message": "Hint submitted",
-        "hint": room.hint,
-        "phase": room.phase
+        "room": room_to_dict(room, current_user_id=current_user.id),
     })
 
 
@@ -118,8 +114,7 @@ def submit_guess(room_code):
 
     return jsonify({
         "message": "Guess submitted",
-        "guess": room.guess,
-        "phase": room.phase
+        "room": room_to_dict(room, current_user_id=current_user.id),
     })
 
 
@@ -148,19 +143,14 @@ def reveal(room_code):
         room.winner = "B"
         room.phase = "game_over"
     else:
-        room.phase = "reveal"
+        room.phase = "scored"
 
     db.session.commit()
 
     return jsonify({
         "message": "Round revealed",
-        "target": room.target,
-        "guess": room.guess,
         "points": points,
-        "team_a_score": room.team_a_score,
-        "team_b_score": room.team_b_score,
-        "winner": room.winner,
-        "phase": room.phase
+        "room": room_to_dict(room, current_user_id=current_user.id),
     })
 
 
@@ -196,8 +186,5 @@ def next_round(room_code):
 
     return jsonify({
         "message": "Next round started",
-        "round_number": room.round_number,
-        "active_team": room.active_team,
-        "psychic": psychic.user.username,
-        "phase": room.phase
+        "room": room_to_dict(room, current_user_id=current_user.id),
     })

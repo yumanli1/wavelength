@@ -28,7 +28,7 @@ function PhaseHelp({ room, isPsychic, isActiveTeam }) {
     return <p className="muted">Waiting for the active team psychic to submit a clue.</p>;
   }
 
-  if (room.phase === "team_guess" && !isPsychic) {
+  if (room.phase === "team_guess" && !isPsychic && isActiveTeam) {
     return <p className="success-text">The clue is in. Move the dial by entering a number from 0 to 180.</p>;
   }
 
@@ -60,6 +60,10 @@ export default function GameRoom({ user, room, setRoom, setView }) {
 
     const timer = setInterval(async () => {
       const data = await getRoom(room.room_code);
+      if (data.error) {
+        setMessage(data.error);
+        return;
+      }
       if (data.room) {
         setRoom(data.room);
       }
@@ -82,8 +86,9 @@ export default function GameRoom({ user, room, setRoom, setView }) {
   const myPlayer = room.my_player || {};
   const isPsychic = Boolean(myPlayer.is_psychic);
   const isActiveTeam = myPlayer.team === room.active_team;
+  const psychicPlayer = (room.players || []).find((player) => player.is_psychic);
   const canHint = room.phase === "psychic_clue" && isPsychic;
-  const canGuess = room.phase === "team_guess" && !isPsychic;
+  const canGuess = room.phase === "team_guess" && isActiveTeam && !isPsychic;
   const canReveal = room.phase === "reveal";
   const canNextRound = room.phase === "scored";
 
@@ -134,6 +139,7 @@ export default function GameRoom({ user, room, setRoom, setView }) {
         <div className="status-panel">
           <p><strong>Phase:</strong> {room.phase.replace("_", " ")}</p>
           <p><strong>Active team:</strong> Team {room.active_team}</p>
+          <p><strong>Psychic:</strong> {psychicPlayer ? psychicPlayer.username : "TBD"}</p>
           {room.target_hidden && <p className="muted">The target is hidden from you until reveal.</p>}
           {room.target !== null && room.target !== undefined && <p><strong>Target:</strong> {room.target}°</p>}
           {room.hint && <p><strong>Hint:</strong> {room.hint}</p>}

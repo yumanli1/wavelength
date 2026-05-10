@@ -8,3 +8,4 @@ instance/
 .env
 cookies.txt
 cookies2.txt
+frontend/build/

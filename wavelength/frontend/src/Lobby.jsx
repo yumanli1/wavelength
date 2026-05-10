@@ -10,7 +10,10 @@ function TeamList({ title, players }) {
       ) : (
         <ul className="player-list">
           {players.map((player) => (
-            <li key={player.id}>{player.username}</li>
+            <li key={player.id}>
+              <span>{player.username}</span>
+              <span className="muted"> · Team {player.team}</span>
+            </li>
           ))}
         </ul>
       )}
@@ -27,6 +30,11 @@ export default function Lobby({ user, room, setRoom, setView }) {
 
     const timer = setInterval(async () => {
       const data = await getRoom(room.room_code);
+
+      if (data.error) {
+        setMessage(data.error);
+        return;
+      }
 
       if (data.room) {
         setRoom(data.room);
@@ -62,6 +70,11 @@ export default function Lobby({ user, room, setRoom, setView }) {
 
     if (data.error) {
       setMessage(data.error);
+      return;
+    }
+
+    if (!data.room) {
+      setMessage("Unexpected server response while starting the game. Please try again.");
       return;
     }
 
