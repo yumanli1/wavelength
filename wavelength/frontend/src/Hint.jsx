@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function Hint({ onSubmit }) {
+export default function Hint({ onSubmit, disabled = false }) {
   const [hint, setHint] = useState("");
 
   return (
@@ -8,7 +8,10 @@ export default function Hint({ onSubmit }) {
       className="form-stack compact-form"
       onSubmit={(event) => {
         event.preventDefault();
-        onSubmit(hint);
+        if (disabled) return;
+        const trimmed = hint.trim();
+        if (!trimmed) return;
+        onSubmit(trimmed);
         setHint("");
       }}
     >
@@ -16,12 +19,15 @@ export default function Hint({ onSubmit }) {
         Psychic clue
         <input
           value={hint}
-          maxLength="120"
+          maxLength={120}
+          disabled={disabled}
           onChange={(event) => setHint(event.target.value)}
           placeholder="Example: final exam week"
         />
       </label>
-      <button className="primary-button" type="submit">Submit clue</button>
+      <button className="primary-button" type="submit" disabled={disabled || !hint.trim()}>
+        Submit clue
+      </button>
     </form>
   );
 }

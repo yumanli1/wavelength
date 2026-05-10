@@ -149,11 +149,11 @@ export default function GameRoom({ user, room, setRoom, setView }) {
 
         <div className="controls-panel">
           {canHint && (
-            <Hint onSubmit={(hint) => runAction(() => submitHint(room.room_code, hint))} />
+            <Hint disabled={busy} onSubmit={(hint) => runAction(() => submitHint(room.room_code, hint))} />
           )}
 
           {canGuess && (
-            <Guess hint={room.hint} onSubmit={(guess) => runAction(() => submitGuess(room.room_code, guess))} />
+            <Guess disabled={busy} hint={room.hint} onSubmit={(guess) => runAction(() => submitGuess(room.room_code, guess))} />
           )}
 
           {canReveal && (
