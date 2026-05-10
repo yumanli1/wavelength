@@ -45,7 +45,8 @@ def create_room():
 @room_bp.route("/<room_code>/join", methods=["POST"])
 @login_required
 def join_room(room_code):
-    room = GameRoom.query.filter_by(room_code=room_code.upper()).first()
+    normalized_code = room_code.strip().upper()
+    room = GameRoom.query.filter_by(room_code=normalized_code).first()
 
     if not room:
         return jsonify({"error": "Room not found"}), 404
@@ -85,7 +86,8 @@ def join_room(room_code):
 @room_bp.route("/<room_code>", methods=["GET"])
 @login_required
 def get_room(room_code):
-    room = GameRoom.query.filter_by(room_code=room_code.upper()).first()
+    normalized_code = room_code.strip().upper()
+    room = GameRoom.query.filter_by(room_code=normalized_code).first()
 
     if not room:
         return jsonify({"error": "Room not found"}), 404

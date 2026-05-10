@@ -44,6 +44,14 @@ async function request(path, options = {}) {
     return { error: "Not logged in. Please log in again." };
   }
 
+  if (!response.ok && data.error === "Room not found") {
+    return {
+      error:
+        `Room not found on this server (${API_BASE}). ` +
+        "Make sure you and your teammate are using the same backend/database instance."
+    };
+  }
+
   if (!response.ok && !data.error) {
     const hint = data._raw && typeof data._raw === "string"
       ? ` (HTTP ${response.status})`
@@ -83,7 +91,11 @@ export async function createRoom() {
 }
 
 export async function joinRoom(roomCode) {
-  return request(`/api/rooms/${roomCode}/join`, { method: "POST" });
+  const cleanRoomCode = String(roomCode || "").trim().toUpperCase();
+  if (!cleanRoomCode) {
+    return { error: "Enter a room code first." };
+  }
+  return request(`/api/rooms/${encodeURIComponent(cleanRoomCode)}/join`, { method: "POST" });
 }
 
 export async function getRoom(roomCode) {

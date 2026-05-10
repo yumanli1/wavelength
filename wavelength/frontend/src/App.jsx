@@ -19,6 +19,10 @@ export default function App() {
       if (data.logged_in) {
         setUser(data.user);
         setView("dashboard");
+      } else {
+        setUser(null);
+        setRoom(null);
+        setView("auth");
       }
 
       setLoading(false);
@@ -26,6 +30,14 @@ export default function App() {
 
     checkUser();
   }, []);
+
+  useEffect(() => {
+    if (loading) return;
+    if (!user && view !== "auth") {
+      setRoom(null);
+      setView("auth");
+    }
+  }, [user, view, loading]);
 
   if (loading) {
     return <main className="page"><section className="card"><h1>Loading Wavelength...</h1></section></main>;
@@ -36,14 +48,23 @@ export default function App() {
   }
 
   if (view === "dashboard") {
+    if (!user) {
+      return <AuthPage setUser={setUser} setView={setView} />;
+    }
     return <Dashboard user={user} setUser={setUser} setRoom={setRoom} setView={setView} />;
   }
 
   if (view === "lobby") {
+    if (!user) {
+      return <AuthPage setUser={setUser} setView={setView} />;
+    }
     return <Lobby user={user} room={room} setRoom={setRoom} setView={setView} />;
   }
 
   if (view === "game") {
+    if (!user) {
+      return <AuthPage setUser={setUser} setView={setView} />;
+    }
     return <GameRoom user={user} room={room} setRoom={setRoom} setView={setView} />;
   }
 

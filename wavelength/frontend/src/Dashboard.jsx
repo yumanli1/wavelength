@@ -54,10 +54,13 @@ export default function Dashboard({ user, setUser, setRoom, setView }) {
   }
 
   async function handleLogout() {
-    await logout();
-    setUser(null);
-    setRoom(null);
-    setView("auth");
+    try {
+      await logout();
+    } finally {
+      setView("auth");
+      setRoom(null);
+      setUser(null);
+    }
   }
 
   return (
@@ -66,7 +69,7 @@ export default function Dashboard({ user, setUser, setRoom, setView }) {
         <div className="top-row">
           <div>
             <p className="eyebrow">Welcome back</p>
-            <h1>{user.username}</h1>
+            <h1>{user?.username || ""}</h1>
           </div>
           <button className="secondary-button" onClick={handleLogout}>Log out</button>
         </div>
