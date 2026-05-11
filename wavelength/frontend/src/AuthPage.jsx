@@ -5,6 +5,7 @@ export default function AuthPage({ setUser, setView }) {
   const [mode, setMode] = useState("login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -54,12 +55,24 @@ export default function AuthPage({ setUser, setView }) {
 
           <label>
             Password
-            <input
-              type="password"
-              placeholder="Enter password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-            />
+            <div className="password-field">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword((current) => !current)}
+                onMouseDown={(event) => event.preventDefault()}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                title={showPassword ? "Hide password" : "Show password"}
+              >
+                <span aria-hidden="true">{showPassword ? "🙈" : "👁"}</span>
+              </button>
+            </div>
           </label>
 
           <button className="primary-button" type="submit" disabled={busy}>
@@ -73,6 +86,7 @@ export default function AuthPage({ setUser, setView }) {
           className="link-button"
           onClick={() => {
             setMessage("");
+            setShowPassword(false);
             setMode(mode === "login" ? "signup" : "login");
           }}
         >

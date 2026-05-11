@@ -104,6 +104,46 @@ input:focus {
   box-shadow: 0 0 0 4px var(--focus);
 }
 
+.password-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-field input {
+  padding-right: 56px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--text);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: background-color 180ms ease, border-color 180ms ease, transform 140ms ease;
+}
+
+[data-theme="dark"] .password-toggle {
+  background: rgba(2, 6, 23, 0.45);
+}
+
+.password-toggle:hover:not(:disabled) {
+  transform: translateY(calc(-50% - 1px));
+}
+
+.password-toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px var(--focus);
+}
+
 .primary-button {
   background: var(--primary);
   color: var(--on-primary);
