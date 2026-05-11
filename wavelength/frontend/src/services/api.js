@@ -1,7 +1,20 @@
 function getDefaultApiBase() {
   const { protocol, hostname } = window.location;
-  const baseProtocol = protocol === "https:" ? "https:" : "http:";
-  return `${baseProtocol}//${hostname}:5000`;
+
+  const isLocalHost =
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "[::1]";
+
+  // Local dev: React on :3000, Flask on :5000.
+  if (isLocalHost) {
+    const baseProtocol = protocol === "https:" ? "https:" : "http:";
+    return `${baseProtocol}//${hostname}:5000`;
+  }
+
+  // Production: prefer same-origin so `/api/...` hits the deployed backend when
+  // frontend and backend are hosted together (reverse proxy / single service).
+  return window.location.origin;
 }
 
 // macOS can route `localhost:5000` to AirPlay/AirTunes instead of your dev server.
@@ -13,7 +26,13 @@ if (!process.env.REACT_APP_API_BASE && window.location.hostname === "localhost")
   window.location.replace(url.toString());
 }
 
-const API_BASE = process.env.REACT_APP_API_BASE || getDefaultApiBase();
+function normalizeApiBase(value) {
+  const trimmed = String(value || "").trim();
+  if (!trimmed) return "";
+  return trimmed.endsWith("/") ? trimmed.slice(0, -1) : trimmed;
+}
+
+const API_BASE = normalizeApiBase(process.env.REACT_APP_API_BASE) || getDefaultApiBase();
 
 async function request(path, options = {}) {
   let response;

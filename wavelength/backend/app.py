@@ -1,5 +1,5 @@
 import os
-from flask import Flask
+from flask import Flask, jsonify
 from flask_cors import CORS
 from extensions import db, login_manager
 from models import User
@@ -17,9 +17,11 @@ app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-this-before-depl
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///wavelength.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-# These settings make the session cookie work better when the React app and Flask
-# API are hosted on different URLs. For localhost, the defaults still work.
-if os.environ.get("FLASK_ENV") == "production":
+# These settings make the session cookie work when the React app and Flask API are
+# hosted on different origins (Render static site + Render web service, etc.).
+# For localhost HTTP dev, keep the defaults so the cookie isn't marked Secure.
+is_production = os.environ.get("FLASK_ENV") == "production" or os.environ.get("RENDER") == "true"
+if is_production:
     app.config["SESSION_COOKIE_SAMESITE"] = "None"
     app.config["SESSION_COOKIE_SECURE"] = True
 
@@ -34,6 +36,10 @@ login_manager.login_view = "auth.login"
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+@login_manager.unauthorized_handler
+def unauthorized():
+    return jsonify({"error": "Not logged in"}), 401
 
 
 app.register_blueprint(auth_bp)
