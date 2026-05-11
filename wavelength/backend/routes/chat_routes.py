@@ -1,10 +1,13 @@
 from flask import Blueprint, request, jsonify
 from flask_login import login_required, current_user
+from sqlalchemy.orm import joinedload
 from extensions import db
-from models import GameRoom, RoomPlayer, ChatMessage
+from models import GameRoom, RoomPlayer, ChatMessage, User
 
 
 chat_bp = Blueprint("chat", __name__, url_prefix="/api/chat")
+
+DEFAULT_AVATAR = "🎮"
 
 
 def _is_user_in_room(room_id, user_id):
@@ -12,11 +15,17 @@ def _is_user_in_room(room_id, user_id):
 
 
 def _message_to_dict(chat_message):
+    profile = getattr(chat_message.user, "profile", None)
+    display_name = (profile.display_name.strip() if profile and profile.display_name else "") or chat_message.user.username
+    avatar = (profile.avatar.strip() if profile and profile.avatar else "") or DEFAULT_AVATAR
+
     return {
         "id": chat_message.id,
         "room_id": chat_message.room_id,
         "user_id": chat_message.user_id,
         "username": chat_message.user.username,
+        "display_name": display_name,
+        "avatar": avatar,
         "message": chat_message.message,
         "created_at": f"{chat_message.created_at.isoformat()}Z",
     }
@@ -37,6 +46,7 @@ def get_messages(room_code):
     limit = 50
     messages = (
         ChatMessage.query.filter_by(room_id=room.id)
+        .options(joinedload(ChatMessage.user).joinedload(User.profile))
         .order_by(ChatMessage.created_at.desc())
         .limit(limit)
         .all()
@@ -79,4 +89,3 @@ def send_message(room_code):
 
     # Return the saved message for immediate display.
     return jsonify({"message": _message_to_dict(chat_message)}), 201
-

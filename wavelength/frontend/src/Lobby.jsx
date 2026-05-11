@@ -224,7 +224,17 @@ export default function Lobby({ user, room, setRoom, setView }) {
               chatMessages.map((msg) => (
                 <div className="chat-message" key={msg.id}>
                   <div className="chat-meta">
-                    <strong>{msg.username}</strong>
+                    <div className="chat-author">
+                      <span className="chat-avatar" aria-hidden="true">
+                        {msg?.avatar || DEFAULT_AVATAR}
+                      </span>
+                      <strong className="chat-name">
+                        {msg?.display_name || msg?.username || "Unknown"}
+                      </strong>
+                      {msg?.display_name && msg?.username && msg.display_name !== msg.username ? (
+                        <span className="muted chat-handle">@{msg.username}</span>
+                      ) : null}
+                    </div>
                     <span className="muted">{formatTime(msg.created_at)}</span>
                   </div>
                   <p className="chat-text">{msg.message}</p>
