@@ -24,6 +24,7 @@ is_production = os.environ.get("FLASK_ENV") == "production" or os.environ.get("R
 if is_production:
     app.config["SESSION_COOKIE_SAMESITE"] = "None"
     app.config["SESSION_COOKIE_SECURE"] = True
+    app.config["SESSION_COOKIE_NAME"] = "wavelength_session"
 
 frontend_origin_env = (os.environ.get("FRONTEND_ORIGIN") or "").strip()
 
