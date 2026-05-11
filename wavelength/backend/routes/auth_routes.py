@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
-from models import User
+from models import User, UserProfile
 from extensions import db
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
@@ -80,3 +80,25 @@ def get_current_user():
         })
 
     return jsonify({"logged_in": False})
+
+@auth_bp.route("/profile", methods=["GET"])
+@login_required
+def get_profile():
+    profile = current_user.profile
+    return jsonify({
+        "display_name": profile.display_name if profile else None,
+        "avatar": profile.avatar if profile else None
+    })
+ 
+@auth_bp.route("/profile", methods=["POST"])
+@login_required
+def save_profile():
+    data = request.get_json()
+    profile = current_user.profile
+    if not profile:
+        profile = UserProfile(user_id=current_user.id)
+        db.session.add(profile)
+    profile.display_name = data.get("display_name")
+    profile.avatar = data.get("avatar")
+    db.session.commit()
+    return jsonify({"message": "Profile saved"})
