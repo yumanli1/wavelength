@@ -293,3 +293,185 @@ input:focus {
 .chat-input-row input {
   margin: 0;
 }
+
+.profile-panel {
+  margin-top: 18px;
+}
+
+.profile-header h2 {
+  margin: 0 0 4px;
+}
+
+.profile-header p {
+  margin: 0 0 12px;
+}
+
+.profile-form {
+  display: grid;
+  gap: 14px;
+  max-width: 560px;
+}
+
+.avatar-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.avatar-option {
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--text);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform 140ms ease, background-color 180ms ease, border-color 180ms ease;
+  font-size: 20px;
+}
+
+[data-theme="dark"] .avatar-option {
+  background: rgba(2, 6, 23, 0.45);
+}
+
+.avatar-option:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.avatar-option.selected {
+  border-color: rgba(109, 40, 217, 0.55);
+  box-shadow: 0 0 0 4px var(--focus);
+}
+
+.player-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.player-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.player-name {
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-handle {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.avatar-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.55);
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+[data-theme="dark"] .avatar-badge {
+  background: rgba(2, 6, 23, 0.45);
+}
+
+.game-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.reaction-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: var(--surface);
+}
+
+.reaction-label {
+  margin: 0;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+.reaction-buttons {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.reaction-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--text);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: transform 140ms ease, background-color 180ms ease, border-color 180ms ease;
+  font-size: 18px;
+}
+
+[data-theme="dark"] .reaction-button {
+  background: rgba(2, 6, 23, 0.45);
+}
+
+.reaction-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.reaction-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px var(--focus);
+}
+
+.reaction-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.reaction-float {
+  position: absolute;
+  font-size: 34px;
+  transform: translate(-50%, 0);
+  animation: reactionFloat 1700ms ease-out forwards;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.18));
+}
+
+@keyframes reactionFloat {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 14px) scale(0.9);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -60px) scale(1.15);
+  }
+}

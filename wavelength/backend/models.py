@@ -16,6 +16,15 @@ class User(db.Model, UserMixin):
         return check_password_hash(self.password_hash, password)
 
 
+class UserProfile(db.Model):
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), primary_key=True)
+    display_name = db.Column(db.String(80), nullable=True)
+    avatar = db.Column(db.String(10), nullable=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    user = db.relationship("User", backref=db.backref("profile", uselist=False))
+
+
 class GameRoom(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     room_code = db.Column(db.String(10), unique=True, nullable=False)
@@ -83,3 +92,14 @@ class ChatMessage(db.Model):
 
     room = db.relationship("GameRoom", backref="chat_messages")
     user = db.relationship("User", backref="chat_messages")
+
+
+class Reaction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey("game_room.id"), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
+    emoji = db.Column(db.String(10), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+    room = db.relationship("GameRoom", backref="reactions")
+    user = db.relationship("User", backref="reactions")

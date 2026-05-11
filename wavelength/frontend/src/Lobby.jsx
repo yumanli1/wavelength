@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { getRoom, startGame, getChatMessages, sendChatMessage } from "./services/api";
+import { getRoom, startGame, getChatMessages, sendChatMessage, getRoomProfiles } from "./services/api";
 
-function TeamList({ title, players }) {
+const DEFAULT_AVATAR = "🎮";
+
+function TeamList({ title, players, profilesById }) {
   return (
     <div className="team-card">
       <h3>{title}</h3>
@@ -10,9 +12,20 @@ function TeamList({ title, players }) {
       ) : (
         <ul className="player-list">
           {players.map((player) => (
-            <li key={player.id}>
-              <span>{player.username}</span>
-              <span className="muted"> · Team {player.team}</span>
+            <li key={player.id} className="player-row">
+              <div className="player-identity">
+                <span className="avatar-badge" aria-hidden="true">
+                  {profilesById?.[player.id]?.avatar || DEFAULT_AVATAR}
+                </span>
+                <span className="player-name">
+                  {profilesById?.[player.id]?.display_name || player.username}
+                </span>
+                {profilesById?.[player.id]?.display_name &&
+                profilesById?.[player.id]?.display_name !== player.username ? (
+                  <span className="muted player-handle">@{player.username}</span>
+                ) : null}
+              </div>
+              <span className="muted">Team {player.team}</span>
             </li>
           ))}
         </ul>
@@ -28,6 +41,8 @@ export default function Lobby({ user, room, setRoom, setView }) {
   const [chatText, setChatText] = useState("");
   const [chatError, setChatError] = useState("");
   const [chatBusy, setChatBusy] = useState(false);
+  const [profilesById, setProfilesById] = useState({});
+  const [profilesError, setProfilesError] = useState("");
 
   useEffect(() => {
     if (!room?.room_code) return;
@@ -50,6 +65,34 @@ export default function Lobby({ user, room, setRoom, setView }) {
 
     return () => clearInterval(timer);
   }, [room?.room_code, setRoom, setView]);
+
+  useEffect(() => {
+    if (!room?.room_code) return;
+
+    let timer = null;
+    let alive = true;
+
+    async function refreshProfiles() {
+      const data = await getRoomProfiles(room.room_code);
+      if (!alive) return;
+
+      if (data.error) {
+        setProfilesError(data.error);
+        return;
+      }
+
+      setProfilesError("");
+      setProfilesById(data.profiles && typeof data.profiles === "object" ? data.profiles : {});
+    }
+
+    refreshProfiles();
+    timer = setInterval(refreshProfiles, 6000);
+
+    return () => {
+      alive = false;
+      if (timer) clearInterval(timer);
+    };
+  }, [room?.room_code]);
 
   useEffect(() => {
     if (!room?.room_code) return;
@@ -88,6 +131,9 @@ export default function Lobby({ user, room, setRoom, setView }) {
   const teamA = room.players.filter((player) => player.team === "A");
   const teamB = room.players.filter((player) => player.team === "B");
   const canStart = teamA.length > 0 && teamB.length > 0;
+  const myProfile = profilesById?.[user?.id] || null;
+  const myDisplayName = myProfile?.display_name || user?.username || "";
+  const myAvatar = myProfile?.avatar || DEFAULT_AVATAR;
 
   async function handleStartGame() {
     setMessage("");
@@ -153,7 +199,7 @@ export default function Lobby({ user, room, setRoom, setView }) {
           <div>
             <p className="eyebrow">Lobby</p>
             <h1>Room {room.room_code}</h1>
-            <p className="muted">Signed in as {user.username}. Share this room code with another player.</p>
+            <p className="muted">Signed in as {myAvatar} {myDisplayName}. Share this room code with another player.</p>
           </div>
           <button className="secondary-button" onClick={() => setView("dashboard")}>Dashboard</button>
         </div>
@@ -161,8 +207,8 @@ export default function Lobby({ user, room, setRoom, setView }) {
         <div className="room-code-box">{room.room_code}</div>
 
         <div className="team-grid">
-          <TeamList title="Team A" players={teamA} />
-          <TeamList title="Team B" players={teamB} />
+          <TeamList title="Team A" players={teamA} profilesById={profilesById} />
+          <TeamList title="Team B" players={teamB} profilesById={profilesById} />
         </div>
 
         <section className="panel chat-panel" aria-label="Room chat">
@@ -192,7 +238,7 @@ export default function Lobby({ user, room, setRoom, setView }) {
               type="text"
               value={chatText}
               maxLength={250}
-              placeholder={`Message as ${user.username}`}
+              placeholder={`Message as ${myDisplayName || user?.username || ""}`}
               onChange={(event) => setChatText(event.target.value)}
               disabled={chatBusy}
             />
@@ -209,6 +255,7 @@ export default function Lobby({ user, room, setRoom, setView }) {
         </button>
 
         {!canStart && <p className="muted">You need at least one player on each team before starting.</p>}
+        {profilesError && <p className="error-text">{profilesError}</p>}
         {message && <p className="error-text">{message}</p>}
       </section>
     </main>

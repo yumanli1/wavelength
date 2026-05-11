@@ -1,9 +1,23 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Board from "./Board";
 import Hint from "./Hint";
 import Guess from "./Guess";
 import GameOver from "./GameOver";
-import { getRoom, submitHint, submitGuess, revealRound, nextRound, getChatMessages, sendChatMessage } from "./services/api";
+import {
+  getRoom,
+  submitHint,
+  submitGuess,
+  revealRound,
+  nextRound,
+  getChatMessages,
+  sendChatMessage,
+  getRoomProfiles,
+  sendReaction,
+  getReactions
+} from "./services/api";
+
+const DEFAULT_AVATAR = "🎮";
+const REACTION_EMOJIS = ["👍", "😂", "😮", "😡", "🔥"];
 
 function Scoreboard({ room }) {
   return (
@@ -63,6 +77,13 @@ export default function GameRoom({ user, room, setRoom, setView }) {
   const [chatText, setChatText] = useState("");
   const [chatError, setChatError] = useState("");
   const [chatBusy, setChatBusy] = useState(false);
+  const [profilesById, setProfilesById] = useState({});
+  const [profilesError, setProfilesError] = useState("");
+  const [reactions, setReactions] = useState([]);
+  const [reactionError, setReactionError] = useState("");
+  const reactionTimeoutsRef = useRef([]);
+  const lastReactionIdRef = useRef(0);
+  const seenReactionIdsRef = useRef(new Set());
 
   useEffect(() => {
     if (!room?.room_code) return;
@@ -80,6 +101,83 @@ export default function GameRoom({ user, room, setRoom, setView }) {
 
     return () => clearInterval(timer);
   }, [room?.room_code, setRoom]);
+
+  useEffect(() => {
+    if (!room?.room_code) return;
+
+    let timer = null;
+    let alive = true;
+
+    async function refreshProfiles() {
+      const data = await getRoomProfiles(room.room_code);
+      if (!alive) return;
+
+      if (data.error) {
+        setProfilesError(data.error);
+        return;
+      }
+
+      setProfilesError("");
+      setProfilesById(data.profiles && typeof data.profiles === "object" ? data.profiles : {});
+    }
+
+    refreshProfiles();
+    timer = setInterval(refreshProfiles, 7000);
+
+    return () => {
+      alive = false;
+      if (timer) clearInterval(timer);
+    };
+  }, [room?.room_code]);
+
+  useEffect(() => {
+    return () => {
+      (reactionTimeoutsRef.current || []).forEach((id) => clearTimeout(id));
+      reactionTimeoutsRef.current = [];
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!room?.room_code) return;
+
+    let alive = true;
+    let timer = null;
+
+    async function pollReactions() {
+      const data = await getReactions(room.room_code, lastReactionIdRef.current || 0);
+      if (!alive) return;
+
+      if (data.error) {
+        setReactionError(data.error);
+        return;
+      }
+
+      setReactionError("");
+      const incoming = Array.isArray(data.reactions) ? data.reactions : [];
+      if (incoming.length === 0) return;
+
+      for (const reaction of incoming) {
+        const id = reaction?.id;
+        if (id === null || id === undefined) continue;
+        if (seenReactionIdsRef.current.has(id)) continue;
+
+        seenReactionIdsRef.current.add(id);
+        if (typeof id === "number" && id > lastReactionIdRef.current) {
+          lastReactionIdRef.current = id;
+        }
+
+        spawnReaction(reaction?.emoji);
+      }
+    }
+
+    pollReactions();
+    timer = setInterval(pollReactions, 1200);
+
+    return () => {
+      alive = false;
+      if (timer) clearInterval(timer);
+    };
+  }, [room?.room_code]);
 
   useEffect(() => {
     if (!room?.room_code) return;
@@ -128,6 +226,12 @@ export default function GameRoom({ user, room, setRoom, setView }) {
   const canGuess = room.phase === "team_guess" && isOpposingTeam;
   const canReveal = room.phase === "reveal";
   const canNextRound = room.phase === "scored";
+  const myProfile = profilesById?.[user?.id] || null;
+  const myDisplayName = myProfile?.display_name || user?.username || "";
+  const myAvatar = myProfile?.avatar || DEFAULT_AVATAR;
+  const psychicProfile = psychicPlayer ? profilesById?.[psychicPlayer.id] : null;
+  const psychicDisplayName = psychicProfile?.display_name || psychicPlayer?.username || "TBD";
+  const psychicAvatar = psychicProfile?.avatar || DEFAULT_AVATAR;
 
   async function runAction(action) {
     setMessage("");
@@ -188,14 +292,64 @@ export default function GameRoom({ user, room, setRoom, setView }) {
     }
   }
 
+  function spawnReaction(emoji) {
+    const cleanEmoji = String(emoji || "").trim();
+    if (!cleanEmoji) return;
+
+    const id = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+    const left = 18 + Math.random() * 64; // percent inside the card
+    const top = 32 + Math.random() * 38; // keep near the board area
+
+    setReactions((current) => [...current, { id, emoji: cleanEmoji, left, top }]);
+
+    const timeoutId = setTimeout(() => {
+      setReactions((current) => current.filter((item) => item.id !== id));
+    }, 1700);
+
+    reactionTimeoutsRef.current.push(timeoutId);
+  }
+
+  async function handleSendReaction(emoji) {
+    if (!room?.room_code) return;
+    setReactionError("");
+    const data = await sendReaction(room.room_code, emoji);
+
+    if (data.error) {
+      setReactionError(data.error);
+      return;
+    }
+
+    if (data.reaction?.id !== undefined && data.reaction?.id !== null) {
+      const id = data.reaction.id;
+      seenReactionIdsRef.current.add(id);
+      if (typeof id === "number" && id > lastReactionIdRef.current) {
+        lastReactionIdRef.current = id;
+      }
+    }
+
+    spawnReaction(data.reaction?.emoji || emoji);
+  }
+
   return (
     <main className="page game-page">
       <section className="card game-card">
+        <div className="reaction-layer" aria-hidden="true">
+          {reactions.map((reaction) => (
+            <div
+              key={reaction.id}
+              className="reaction-float"
+              style={{ left: `${reaction.left}%`, top: `${reaction.top}%` }}
+            >
+              {reaction.emoji}
+            </div>
+          ))}
+        </div>
+
         <div className="top-row">
           <div>
             <p className="eyebrow">Room {room.room_code} · Round {room.round_number}</p>
             <h1>Wavelength</h1>
-            <p className="muted">You are {user.username} on Team {myPlayer.team || "?"}.</p>
+            <p className="muted">You are {myAvatar} {myDisplayName} on Team {myPlayer.team || "?"}.</p>
           </div>
           <button className="secondary-button" onClick={() => setView("dashboard")}>Leave view</button>
         </div>
@@ -208,6 +362,23 @@ export default function GameRoom({ user, room, setRoom, setView }) {
             ↔
           </strong>
           <span>{room.spectrum_right}</span>
+        </div>
+
+        <div className="reaction-bar" aria-label="Emoji reactions">
+          <p className="muted reaction-label">Reactions</p>
+          <div className="reaction-buttons">
+            {REACTION_EMOJIS.map((emoji) => (
+              <button
+                key={emoji}
+                type="button"
+                className="reaction-button"
+                onClick={() => handleSendReaction(emoji)}
+                aria-label={`Send reaction ${emoji}`}
+              >
+                <span aria-hidden="true">{emoji}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Psychic POV: show zones + labels but NOT the gray outer bands (handled in Board).
@@ -228,7 +399,7 @@ export default function GameRoom({ user, room, setRoom, setView }) {
         <div className="status-panel">
           <p><strong>Phase:</strong> {room.phase.replace("_", " ")}</p>
           <p><strong>Active team:</strong> Team {room.active_team}</p>
-          <p><strong>Psychic:</strong> {psychicPlayer ? psychicPlayer.username : "TBD"}</p>
+          <p><strong>Psychic:</strong> {psychicPlayer ? `${psychicAvatar} ${psychicDisplayName}` : "TBD"}</p>
           {room.target_hidden && <p className="muted">The target is hidden from you until reveal.</p>}
           {room.target !== null && room.target !== undefined && <p><strong>Target:</strong> {room.target}°</p>}
           {room.hint && <p><strong>Hint:</strong> {room.hint}</p>}
@@ -289,7 +460,7 @@ export default function GameRoom({ user, room, setRoom, setView }) {
               type="text"
               value={chatText}
               maxLength={250}
-              placeholder={`Message as ${user.username}`}
+              placeholder={`Message as ${myDisplayName || user?.username || ""}`}
               onChange={(event) => setChatText(event.target.value)}
               disabled={chatBusy}
             />
@@ -302,6 +473,8 @@ export default function GameRoom({ user, room, setRoom, setView }) {
         </section>
 
         {busy && <p className="muted">Updating game...</p>}
+        {profilesError && <p className="error-text">{profilesError}</p>}
+        {reactionError && <p className="error-text">{reactionError}</p>}
         {message && <p className={message.includes("error") ? "error-text" : "success-text"}>{message}</p>}
       </section>
     </main>

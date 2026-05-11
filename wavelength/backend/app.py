@@ -7,6 +7,8 @@ from routes.auth_routes import auth_bp
 from routes.room_routes import room_bp
 from routes.game_routes import game_bp
 from routes.chat_routes import chat_bp
+from routes.profile_routes import profile_bp
+from routes.reaction_routes import reaction_bp
 
 
 app = Flask(__name__)
@@ -38,6 +40,8 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(room_bp)
 app.register_blueprint(game_bp)
 app.register_blueprint(chat_bp)
+app.register_blueprint(profile_bp)
+app.register_blueprint(reaction_bp)
 
 
 with app.app_context():

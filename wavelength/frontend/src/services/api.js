@@ -157,3 +157,56 @@ export async function sendChatMessage(roomCode, message) {
     body: JSON.stringify({ message: trimmed })
   });
 }
+
+export async function getMyProfile() {
+  return request("/api/profile/me");
+}
+
+export async function updateMyProfile(displayName, avatar) {
+  return request("/api/profile/me", {
+    method: "POST",
+    body: JSON.stringify({
+      display_name: displayName ?? "",
+      avatar: avatar ?? ""
+    })
+  });
+}
+
+export async function getRoomProfiles(roomCode) {
+  const cleanRoomCode = String(roomCode || "").trim().toUpperCase();
+  if (!cleanRoomCode) {
+    return { error: "Missing room code." };
+  }
+  return request(`/api/profile/room/${encodeURIComponent(cleanRoomCode)}`);
+}
+
+export async function sendReaction(roomCode, emoji) {
+  const cleanRoomCode = String(roomCode || "").trim().toUpperCase();
+  const cleanEmoji = String(emoji || "").trim();
+
+  if (!cleanRoomCode) {
+    return { error: "Missing room code." };
+  }
+
+  if (!cleanEmoji) {
+    return { error: "Missing reaction." };
+  }
+
+  return request(`/api/reactions/${encodeURIComponent(cleanRoomCode)}`, {
+    method: "POST",
+    body: JSON.stringify({ emoji: cleanEmoji })
+  });
+}
+
+export async function getReactions(roomCode, since) {
+  const cleanRoomCode = String(roomCode || "").trim().toUpperCase();
+  if (!cleanRoomCode) {
+    return { error: "Missing room code." };
+  }
+
+  const query = since !== undefined && since !== null && String(since).trim() !== ""
+    ? `?since=${encodeURIComponent(String(since).trim())}`
+    : "";
+
+  return request(`/api/reactions/${encodeURIComponent(cleanRoomCode)}${query}`);
+}
