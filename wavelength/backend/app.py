@@ -25,8 +25,21 @@ if is_production:
     app.config["SESSION_COOKIE_SAMESITE"] = "None"
     app.config["SESSION_COOKIE_SECURE"] = True
 
-allowed_origin = os.environ.get("FRONTEND_ORIGIN", "http://localhost:3000")
-CORS(app, supports_credentials=True, origins=[allowed_origin, "http://127.0.0.1:3000"])
+frontend_origin_env = (os.environ.get("FRONTEND_ORIGIN") or "").strip()
+
+# Always allow local dev frontends, even if FRONTEND_ORIGIN is set for Render.
+# (Mixing localhost and 127.0.0.1 will still work as long as both origins are allowed.)
+cors_origins = {
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+}
+if frontend_origin_env:
+    for origin in frontend_origin_env.split(","):
+        clean = origin.strip()
+        if clean:
+            cors_origins.add(clean)
+
+CORS(app, supports_credentials=True, origins=sorted(cors_origins))
 
 db.init_app(app)
 login_manager.init_app(app)

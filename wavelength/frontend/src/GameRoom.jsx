@@ -81,9 +81,12 @@ export default function GameRoom({ user, room, setRoom, setView }) {
   const [profilesError, setProfilesError] = useState("");
   const [reactions, setReactions] = useState([]);
   const [reactionError, setReactionError] = useState("");
+  const [copyFeedback, setCopyFeedback] = useState("");
+  const [copyFailed, setCopyFailed] = useState(false);
   const reactionTimeoutsRef = useRef([]);
   const lastReactionIdRef = useRef(0);
   const seenReactionIdsRef = useRef(new Set());
+  const copyTimeoutRef = useRef(null);
 
   useEffect(() => {
     if (!room?.room_code) return;
@@ -134,6 +137,7 @@ export default function GameRoom({ user, room, setRoom, setView }) {
     return () => {
       (reactionTimeoutsRef.current || []).forEach((id) => clearTimeout(id));
       reactionTimeoutsRef.current = [];
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
     };
   }, []);
 
@@ -292,6 +296,31 @@ export default function GameRoom({ user, room, setRoom, setView }) {
     }
   }
 
+  async function handleCopyRoomCode() {
+    const code = String(room?.room_code || "").trim();
+    if (!code) return;
+
+    if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+
+    try {
+      if (!navigator?.clipboard?.writeText) {
+        throw new Error("Clipboard API not available");
+      }
+
+      await navigator.clipboard.writeText(code);
+      setCopyFailed(false);
+      setCopyFeedback("Copied!");
+    } catch (error) {
+      setCopyFailed(true);
+      setCopyFeedback("Could not copy. Please copy manually.");
+    }
+
+    copyTimeoutRef.current = setTimeout(() => {
+      setCopyFeedback("");
+      setCopyFailed(false);
+    }, 1600);
+  }
+
   function spawnReaction(emoji) {
     const cleanEmoji = String(emoji || "").trim();
     if (!cleanEmoji) return;
@@ -351,7 +380,17 @@ export default function GameRoom({ user, room, setRoom, setView }) {
             <h1>Wavelength</h1>
             <p className="muted">You are {myAvatar} {myDisplayName} on Team {myPlayer.team || "?"}.</p>
           </div>
-          <button className="secondary-button" onClick={() => setView("dashboard")}>Leave view</button>
+          <div className="top-actions">
+            <button type="button" className="secondary-button" onClick={handleCopyRoomCode}>
+              Copy room code
+            </button>
+            {copyFeedback ? (
+              <span className={copyFailed ? "error-text copy-feedback" : "success-text copy-feedback"}>
+                {copyFeedback}
+              </span>
+            ) : null}
+            <button className="secondary-button" onClick={() => setView("dashboard")}>Leave view</button>
+          </div>
         </div>
 
         <Scoreboard room={room} />

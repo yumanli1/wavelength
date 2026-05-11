@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getRoom, startGame, getChatMessages, sendChatMessage, getRoomProfiles } from "./services/api";
 
 const DEFAULT_AVATAR = "🎮";
@@ -43,6 +43,15 @@ export default function Lobby({ user, room, setRoom, setView }) {
   const [chatBusy, setChatBusy] = useState(false);
   const [profilesById, setProfilesById] = useState({});
   const [profilesError, setProfilesError] = useState("");
+  const [copyFeedback, setCopyFeedback] = useState("");
+  const [copyFailed, setCopyFailed] = useState(false);
+  const copyTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!room?.room_code) return;
@@ -192,6 +201,31 @@ export default function Lobby({ user, room, setRoom, setView }) {
     }
   }
 
+  async function handleCopyRoomCode() {
+    const code = String(room?.room_code || "").trim();
+    if (!code) return;
+
+    if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+
+    try {
+      if (!navigator?.clipboard?.writeText) {
+        throw new Error("Clipboard API not available");
+      }
+
+      await navigator.clipboard.writeText(code);
+      setCopyFailed(false);
+      setCopyFeedback("Copied!");
+    } catch (error) {
+      setCopyFailed(true);
+      setCopyFeedback("Could not copy. Please select the code and copy manually.");
+    }
+
+    copyTimeoutRef.current = setTimeout(() => {
+      setCopyFeedback("");
+      setCopyFailed(false);
+    }, 1600);
+  }
+
   return (
     <main className="page">
       <section className="card lobby-card">
@@ -205,6 +239,16 @@ export default function Lobby({ user, room, setRoom, setView }) {
         </div>
 
         <div className="room-code-box">{room.room_code}</div>
+        <div className="room-code-actions">
+          <button type="button" className="secondary-button" onClick={handleCopyRoomCode}>
+            Copy room code
+          </button>
+          {copyFeedback ? (
+            <span className={copyFailed ? "error-text copy-feedback" : "success-text copy-feedback"}>
+              {copyFeedback}
+            </span>
+          ) : null}
+        </div>
 
         <div className="team-grid">
           <TeamList title="Team A" players={teamA} profilesById={profilesById} />

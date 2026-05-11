@@ -9,21 +9,14 @@ function getDefaultApiBase() {
   // Local dev: React on :3000, Flask on :5000.
   if (isLocalHost) {
     const baseProtocol = protocol === "https:" ? "https:" : "http:";
+    // Use the same hostname for frontend + backend during local dev so Flask session
+    // cookies remain same-site (mixing localhost and 127.0.0.1 can break auth cookies).
     return `${baseProtocol}//${hostname}:5000`;
   }
 
   // Production: prefer same-origin so `/api/...` hits the deployed backend when
   // frontend and backend are hosted together (reverse proxy / single service).
   return window.location.origin;
-}
-
-// macOS can route `localhost:5000` to AirPlay/AirTunes instead of your dev server.
-// To keep cookies working (same hostname) and avoid that conflict, prefer 127.0.0.1
-// during local dev unless the user explicitly set `REACT_APP_API_BASE`.
-if (!process.env.REACT_APP_API_BASE && window.location.hostname === "localhost") {
-  const url = new URL(window.location.href);
-  url.hostname = "127.0.0.1";
-  window.location.replace(url.toString());
 }
 
 function normalizeApiBase(value) {
