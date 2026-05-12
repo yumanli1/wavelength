@@ -222,3 +222,18 @@ Developed as a UC Merced CSE 108 Full-Stack Web Development project.
 - Added light/dark theme support with persistent user preferences
 - Added gameplay/UI improvements including hamburger menu, rules modal, room code copy button, password visibility toggle, and winner confetti animation
 - Fixed logout/session handling and improved frontend/backend synchronization and deployment behavior
+
+# Kris Pichon — Main Contributions
+
+- Completed major final integration work for the playable Wavelength app
+- Built out the Dashboard, Lobby, and GameRoom frontend pages for the main user flow
+- Connected the React frontend to the Flask backend using API request handling
+- Improved room creation, room joining, lobby state, and game state display behavior
+- Implemented the core playable Wavelength flow including clue submission, guessing, reveal, scoring, and next-round functionality
+- Improved backend room/game route logic for phase handling, player roles, round progression, and score updates
+- Added frontend styling for the dashboard, lobby, game board, forms, buttons, and gameplay screens
+- Updated API/session handling for local development so login and room actions work correctly across the frontend and backend
+- Added backend requirements and setup documentation for running the Flask server
+- Updated the README with local setup, demo flow, troubleshooting notes, and contributor information
+- Debugged local run issues including npm install problems, React start errors, localhost API behavior, and room/session testing
+- Helped prepare the project for final demo readiness by testing the signup, login, create room, join room, start game, clue, guess, reveal, and next-round flow
