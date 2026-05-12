@@ -207,3 +207,18 @@ npm run build
 # Contributors
 
 Developed as a UC Merced CSE 108 Full-Stack Web Development project.
+
+# Freysell Perez Rugama — Main Contributions
+
+- Designed and setup the full Flask backend architecture and database models
+- Restructured the project into separate frontend/backend architecture
+- Implemented user authentication, protected routes, and multiplayer room logic
+- Built the core gameplay flow including rounds, scoring, reveals, and team synchronization
+- Added spectrum topic generation for game rounds
+- Developed the frontend authentication flow and API integration
+- Created multiplayer room chat functionality for both lobby and gameplay
+- Added profile customization with avatars and display names
+- Implemented floating emoji reactions during gameplay
+- Added light/dark theme support with persistent user preferences
+- Added gameplay/UI improvements including hamburger menu, rules modal, room code copy button, password visibility toggle, and winner confetti animation
+- Fixed logout/session handling and improved frontend/backend synchronization and deployment behavior
