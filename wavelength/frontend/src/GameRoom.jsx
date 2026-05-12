@@ -237,6 +237,28 @@ export default function GameRoom({ user, room, setRoom, setView, copyRoomCode })
   const psychicDisplayName = psychicProfile?.display_name || psychicPlayer?.username || "TBD";
   const psychicAvatar = psychicProfile?.avatar || DEFAULT_AVATAR;
 
+  // async function runAction(action) {
+  //   setMessage("");
+  //   setBusy(true);
+  //   const data = await action();
+  //   setBusy(false);
+
+  //   if (data.error) {
+  //     setMessage(data.error);
+  //     return;
+  //   }
+
+  //   if (data.room) {
+  //     setRoom(data.room);
+  //   }
+
+  //   if (data.points !== undefined) {
+  //     setMessage(`Round scored: ${data.points} point${data.points === 1 ? "" : "s"}.`);
+  //   } else if (data.message) {
+  //     setMessage(data.message);
+  //   }
+  // }
+
   async function runAction(action) {
     setMessage("");
     setBusy(true);
@@ -250,6 +272,12 @@ export default function GameRoom({ user, room, setRoom, setView, copyRoomCode })
 
     if (data.room) {
       setRoom(data.room);
+    }
+
+    // Immediately fetch fresh room state to avoid stale poll overwrite
+    const refreshed = await getRoom(room.room_code);
+    if (refreshed.room) {
+      setRoom(refreshed.room);
     }
 
     if (data.points !== undefined) {
