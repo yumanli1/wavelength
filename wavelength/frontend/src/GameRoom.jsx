@@ -70,7 +70,7 @@ function PhaseHelp({ room, isPsychic, isActiveTeam, isOpposingTeam }) {
   return <p className="muted">Game in progress.</p>;
 }
 
-export default function GameRoom({ user, room, setRoom, setView }) {
+export default function GameRoom({ user, room, setRoom, setView, copyRoomCode }) {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
@@ -302,18 +302,9 @@ export default function GameRoom({ user, room, setRoom, setView }) {
 
     if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
 
-    try {
-      if (!navigator?.clipboard?.writeText) {
-        throw new Error("Clipboard API not available");
-      }
-
-      await navigator.clipboard.writeText(code);
-      setCopyFailed(false);
-      setCopyFeedback("Copied!");
-    } catch (error) {
-      setCopyFailed(true);
-      setCopyFeedback("Could not copy. Please copy manually.");
-    }
+    const result = await copyRoomCode(code);
+    setCopyFailed(!result.ok);
+    setCopyFeedback(result.message);
 
     copyTimeoutRef.current = setTimeout(() => {
       setCopyFeedback("");
