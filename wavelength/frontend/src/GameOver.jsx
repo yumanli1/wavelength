@@ -7,6 +7,7 @@ export default function GameOver({ room, user, onBack }) {
   const myTeam = room.my_player?.team;
 
   const didWin = myTeam === winner;
+  const showCelebrate = room.phase === "game_over" || Boolean(winner);
 
   const totalPointsA = history
     .filter((r) => r.active_team === "A")
@@ -85,10 +86,19 @@ export default function GameOver({ room, user, onBack }) {
   return (
     <main className="page">
       <section className="card game-card">
+        {showCelebrate ? (
+          <div className="winner-confetti" aria-hidden="true">
+            {Array.from({ length: 28 }).map((_, idx) => (
+              <span key={idx} className="confetti-piece" />
+            ))}
+          </div>
+        ) : null}
+
+        <div className="gameover-content">
 
         <div style={{ marginBottom: "1.5rem" }}>
           <p className="eyebrow">Game over · Room {room.room_code}</p>
-          <h1 style={{ margin: "4px 0 6px" }}>
+          <h1 className="winner-title" style={{ margin: "4px 0 6px" }}>
             {didWin ? "Your team won!" : `Team ${winner} wins`}
           </h1>
           <p className="muted">{history.length} rounds played</p>
@@ -192,6 +202,7 @@ export default function GameOver({ room, user, onBack }) {
         )}
 
         <button className="primary-button" onClick={onBack}>Back to dashboard</button>
+        </div>
       </section>
     </main>
   );
